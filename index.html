@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <meta name="theme-color" content="#1d3557" />
+  <meta name="description" content="WindRider GPX : découpez votre parcours vélo en segments et visualisez l'impact du vent, heure par heure, grâce à Open-Meteo." />
+  <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <title>WindRider GPX</title>
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <header>
+        <h1>🚴 WindRider GPX</h1>
+        <p class="subtitle">Météo &amp; vent, segment par segment</p>
+      </header>
+
+      <form id="ride-form">
+        <label for="gpx-file">Fichier GPX</label>
+        <input type="file" id="gpx-file" accept=".gpx" required />
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="start-time">Heure de départ</label>
+            <input type="time" id="start-time" value="08:30" required />
+          </div>
+          <div class="form-field">
+            <label for="avg-speed">Vitesse moy. (km/h)</label>
+            <input type="number" id="avg-speed" value="25" min="1" max="60" step="0.5" required />
+          </div>
+        </div>
+
+        <button type="submit" id="submit-btn">Analyser le parcours</button>
+      </form>
+
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+
+      <div class="legend">
+        <span><i style="background:#2a9d3d"></i> Vent de dos</span>
+        <span><i style="background:#f4a300"></i> Vent de côté</span>
+        <span><i style="background:#e63946"></i> Vent de face</span>
+      </div>
+
+      <div id="info-panel" aria-live="polite"></div>
+    </aside>
+
+    <main id="map"></main>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
