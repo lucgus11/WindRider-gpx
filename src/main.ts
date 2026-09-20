@@ -21,6 +21,7 @@ L.Icon.Default.mergeOptions({
 
 const form = document.getElementById('ride-form') as HTMLFormElement;
 const fileInput = document.getElementById('gpx-file') as HTMLInputElement;
+const startDateInput = document.getElementById('start-date') as HTMLInputElement;
 const startTimeInput = document.getElementById('start-time') as HTMLInputElement;
 const speedInput = document.getElementById('avg-speed') as HTMLInputElement;
 const statusEl = document.getElementById('status') as HTMLDivElement;
@@ -36,6 +37,22 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom: 19
 }).addTo(map);
+
+// --- Initialisation du champ date -------------------------------------
+
+function toISODate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+{
+  const today = new Date();
+  const maxDate = new Date();
+  maxDate.setDate(maxDate.getDate() + 15); // horizon des prévisions Open-Meteo (~16 jours)
+
+  startDateInput.value = toISODate(today);
+  startDateInput.min = toISODate(today);
+  startDateInput.max = toISODate(maxDate);
+}
 
 let currentLayers: L.Layer[] = [];
 
@@ -116,10 +133,11 @@ form.addEventListener('submit', async (event) => {
     return;
   }
 
+  const startDate = startDateInput.value; // format "YYYY-MM-DD"
   const startTime = startTimeInput.value; // format "HH:MM"
   const speed = parseFloat(speedInput.value);
-  if (!startTime || !speed || speed <= 0) {
-    setStatus('Veuillez renseigner une heure de départ et une vitesse valides.', true);
+  if (!startDate || !startTime || !speed || speed <= 0) {
+    setStatus('Veuillez renseigner une date, une heure de départ et une vitesse valides.', true);
     return;
   }
 
@@ -138,12 +156,12 @@ form.addEventListener('submit', async (event) => {
     const segments = splitIntoSegments(points, 1.5); // segments cibles ~1.5 km (1-2 km)
     setStatus(`Tracé découpé en ${segments.length} segments. Récupération de la météo...`);
 
-    // Date/heure de départ : aujourd'hui à l'heure indiquée (Open-Meteo fournit
-    // les prévisions horaires pour le jour même et les ~16 prochains jours).
+    // Date/heure de départ choisies par l'utilisateur (Open-Meteo fournit des
+    // prévisions horaires pour aujourd'hui et les ~16 prochains jours).
+    const [year, month, day] = startDate.split('-').map(Number);
     const [hours, minutes] = startTime.split(':').map(Number);
-    const departure = new Date();
-    departure.setHours(hours, minutes, 0, 0);
-    const dateISO = departure.toISOString().slice(0, 10);
+    const departure = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    const dateISO = startDate;
 
     const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lon] as [number, number]));
     map.fitBounds(bounds, { padding: [30, 30] });
