@@ -3,6 +3,7 @@
 PWA (Progressive Web App) pour cyclistes : importez un parcours **GPX**, indiquez votre **heure de départ** et votre **vitesse moyenne**, et visualisez sur une carte **OpenStreetMap/Leaflet** l'impact du vent segment par segment, avec le bulletin météo complet (Open-Meteo) pour chaque tronçon.
 
 - 🟢 Vert = vent de dos · 🟠 Orange = vent de côté · 🔴 Rouge = vent de face
+- Date **et** heure de départ personnalisables (jusqu'à ~15 jours à l'avance)
 - 100% gratuit, sans clé API (Open-Meteo + fonds de carte OSM)
 - Fonctionne hors-ligne une fois chargée (Service Worker / Workbox)
 - Installable sur mobile et desktop (manifeste PWA)
@@ -22,8 +23,8 @@ PWA (Progressive Web App) pour cyclistes : importez un parcours **GPX**, indique
 
 1. **Parsing GPX** (`src/gpx.ts`) : lecture des `<trkpt>` (ou `<rtept>`) du fichier, calcul de la distance cumulée (formule de haversine, `src/geo.ts`).
 2. **Découpage** : le tracé est segmenté automatiquement en tronçons de ~1 à 2 km (`splitIntoSegments`), en conservant tous les points GPX intermédiaires pour un rendu fidèle sur la carte.
-3. **Calcul temporel** : pour chaque segment, l'heure de passage est déduite de `heure de départ + (distance cumulée / vitesse moyenne)`.
-4. **Météo** (`src/weather.ts`) : appel à `https://api.open-meteo.com/v1/forecast` avec les coordonnées du point médian du segment et la date du jour ; sélection de la prévision horaire la plus proche de l'heure de passage calculée.
+3. **Calcul temporel** : pour chaque segment, l'heure de passage est déduite de `date + heure de départ + (distance cumulée / vitesse moyenne)`.
+4. **Météo** (`src/weather.ts`) : appel à `https://api.open-meteo.com/v1/forecast` avec les coordonnées du point médian du segment et la **date choisie par l'utilisateur** ; sélection de la prévision horaire la plus proche de l'heure de passage calculée.
 5. **Impact du vent** (`src/wind.ts`) : comparaison vectorielle entre le cap de déplacement du segment (bearing) et la direction d'où vient le vent (`wind_direction_10m`, convention météo) pour classer chaque segment en **face / côté / dos**.
 6. **Affichage** (`src/main.ts`) : chaque segment est dessiné en `L.polyline` colorée ; un clic ouvre le panneau latéral avec le bulletin complet (heure, vent, rafales, pluie, température ressentie, humidité, UV).
 
@@ -124,7 +125,7 @@ windrider-gpx/
 ## Limites connues / pistes d'amélioration
 
 - Les appels météo sont faits segment par segment (avec cache par coordonnées arrondies + date) ; pour un très long parcours, cela peut représenter de nombreuses requêtes. Une pause de 200 ms est insérée tous les 10 segments pour rester raisonnable vis-à-vis de l'API gratuite Open-Meteo.
-- La date de la sortie est toujours "aujourd'hui" ; ajouter un sélecteur de date est une évolution simple (ajuster `dateISO` dans `main.ts`).
+- Le champ date est borné à la fenêtre de prévision d'Open-Meteo (aujourd'hui → +15 jours environ) ; une date trop lointaine renverra une erreur de l'API.
 - Le vent est évalué au point médian de chaque segment (~1-2 km) : suffisant pour du vent météo à cette échelle, mais on pourrait affiner en interpolant entre le vent en début et fin de segment.
 
 ## Licence
